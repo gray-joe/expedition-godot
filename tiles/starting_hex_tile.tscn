@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://d0rpge4udlywo"]
+
+[ext_resource type="PackedScene" uid="uid://l1733uo8kv6x" path="res://tiles/starting_hex_tile.glb" id="1_6uel7"]
+
+[node name="StartingHexTile" type="Node3D"]
+
+[node name="starting_hex_tile" parent="." instance=ExtResource("1_6uel7")]

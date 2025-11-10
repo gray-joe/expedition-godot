@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bjgvi4yqqkhh6"]
+
+[ext_resource type="PackedScene" uid="uid://yencyftg0l6l" path="res://marsh_hex_tile.glb" id="1_id111"]
+
+[node name="MarshHexTile" type="Node3D"]
+
+[node name="marsh_hex_tile" parent="." instance=ExtResource("1_id111")]

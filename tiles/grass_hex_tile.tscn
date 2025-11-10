@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://b25hb2jwd2t1s"]
+
+[ext_resource type="PackedScene" uid="uid://s3bw8b324pxp" path="res://tiles/grass_hex_tile.glb" id="1_5xwhy"]
+
+[node name="GrassHexTile" type="Node3D"]
+
+[node name="grass_hex_tile" parent="." instance=ExtResource("1_5xwhy")]

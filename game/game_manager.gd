@@ -1,0 +1,171 @@
+extends Node3D
+
+enum GameState {
+	SETUP,
+	IN_GAME,
+	END
+}
+
+@export var hex_grid_scene: PackedScene
+@export var player_scene: PackedScene
+
+var current_state: GameState = GameState.SETUP
+var players: Array[Node3D] = []
+var current_player_index: int = 0
+var hex_grid: Node3D
+var ui_manager: UIManager = null
+var current_turn: int = 1
+
+func _ready() -> void:
+	_initialize_game()
+
+func _initialize_game() -> void:
+	_setup_ui()
+	
+	if hex_grid_scene:
+		hex_grid = hex_grid_scene.instantiate()
+		add_child(hex_grid)
+	else:
+		print("GameManager: Error - No hex grid scene assigned!")
+		return
+	
+	start_game()
+
+func _setup_ui() -> void:
+	ui_manager = UIManager.new()
+	add_child(ui_manager)
+	
+	ui_manager.end_turn_requested.connect(_on_end_turn_requested)
+
+func start_game() -> void:
+	current_state = GameState.SETUP
+	
+	await get_tree().process_frame
+	_spawn_players()
+	
+	current_state = GameState.IN_GAME
+	_start_turn()
+
+func _spawn_players() -> void:
+	if not player_scene:
+		print("GameManager: Error - No player scene assigned!")
+		return
+	
+	if not hex_grid:
+		print("GameManager: Error - No hex grid reference!")
+		return
+	
+	var starting_tiles = hex_grid.get_starting_tiles()
+	if starting_tiles.size() == 0:
+		print("GameManager: Error - No starting tiles found!")
+		return
+	
+	for i in range(starting_tiles.size()):
+		var player = player_scene.instantiate()
+		player.name = "Player_" + str(i + 1)
+		
+		if player.has_method("set_player_name"):
+			player.set_player_name("Player " + str(i + 1))
+		
+		if player.has_method("set_player_id"):
+			player.set_player_id(i + 1)
+
+		if player.has_method("set_turn_duration"):
+			player.set_turn_duration(30.0)
+
+		if player.has_method("initialize"):
+			player.initialize(hex_grid)
+		
+		players.append(player)
+		
+		var success = hex_grid.spawn_player_on_starting_tile(player, starting_tiles[i])
+		if success:
+			pass
+		else:
+			print("GameManager: Failed to place player ", i + 1, " on starting tile")
+			players.pop_back()
+			player.queue_free()
+
+func end_game() -> void:
+	current_state = GameState.END
+	print("GameManager: Game ended! Final state: ", GameState.keys()[current_state])
+
+func _start_turn() -> void:
+	if current_state != GameState.IN_GAME:
+		return
+	
+	var current_player = get_current_player()
+	if current_player:
+		if hex_grid and hex_grid.has_method("set_current_player"):
+			hex_grid.set_current_player(current_player)
+		else:
+			print("GameManager: Hex grid or set_current_player method not found!")
+		
+		if current_player.has_method("start_turn"):
+			current_player.start_turn()
+		
+		if ui_manager:
+			ui_manager.update_current_player(current_player.name, current_turn)
+			ui_manager.set_end_turn_enabled(true)
+			
+			if current_player.has_method("get_turn_manager"):
+				var turn_manager = current_player.get_turn_manager()
+				ui_manager.set_turn_manager(turn_manager)
+				ui_manager.reset_turn_timer()
+			
+			# Connect player movement signals and update movement display
+			if current_player.has_method("get_movement_info"):
+				var movement_info = current_player.get_movement_info()
+				ui_manager.update_movement_remaining(movement_info.movement_speed, movement_info.movement_cost_spent)
+			
+			# Connect to player_moved signal to update movement remaining
+			if current_player.has_signal("player_moved"):
+				if not current_player.player_moved.is_connected(_on_player_moved):
+					current_player.player_moved.connect(_on_player_moved)
+		
+	else:
+		print("GameManager: Error - No current player found!")
+
+func next_turn() -> void:
+	if current_state != GameState.IN_GAME:
+		return
+	
+	var current_player = get_current_player()
+	
+	# Disconnect from previous player's signals
+	if current_player and current_player.has_signal("player_moved"):
+		if current_player.player_moved.is_connected(_on_player_moved):
+			current_player.player_moved.disconnect(_on_player_moved)
+	
+	if current_player and current_player.has_method("end_turn"):
+		current_player.end_turn()
+	
+	if hex_grid and hex_grid.has_method("set_current_player"):
+		hex_grid.set_current_player(null)
+	
+	current_player_index = (current_player_index + 1) % players.size()
+	
+	if current_player_index == 0:
+		current_turn += 1
+	
+	_start_turn()
+
+func _on_end_turn_requested() -> void:
+	next_turn()
+
+func _on_player_moved(_new_position: Vector2i) -> void:
+	var current_player = get_current_player()
+	if current_player and current_player.has_method("get_movement_info") and ui_manager:
+		var movement_info = current_player.get_movement_info()
+		ui_manager.update_movement_remaining(movement_info.movement_speed, movement_info.movement_cost_spent)
+
+func get_current_player() -> Node3D:
+	if players.is_empty():
+		return null
+	return players[current_player_index]
+
+func get_current_state() -> GameState:
+	return current_state
+
+func is_game_active() -> bool:
+	return current_state == GameState.IN_GAME

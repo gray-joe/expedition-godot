@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://bi6bgdalnfs4b"]
+
+[ext_resource type="Script" uid="uid://bbp8uvqjlsvex" path="res://player/player.gd" id="1_rkbax"]
+[ext_resource type="PackedScene" uid="uid://qipyy5k47n0s" path="res://pieces/player_piece.tscn" id="2_g1dw6"]
+
+[node name="Player" type="Node3D"]
+script = ExtResource("1_rkbax")
+max_turn_duration = 120.0
+
+[node name="Node3D" parent="." instance=ExtResource("2_g1dw6")]

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://c6qvgkh2kadmh"]
+
+[ext_resource type="PackedScene" uid="uid://cno56sc1cmtf8" path="res://tiles/water_hex_tile_v2.glb" id="1_dcv2q"]
+
+[node name="WaterHexTile" type="Node3D"]
+
+[node name="water_hex_tile_v2" parent="." instance=ExtResource("1_dcv2q")]

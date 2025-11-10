@@ -1,0 +1,10 @@
+[gd_scene load_steps=4 format=3 uid="uid://e883uk8ksy02"]
+
+[ext_resource type="Script" uid="uid://dp6iuih31l6wh" path="res://game/game_manager.gd" id="1_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://ceeybkhrleyic" path="res://hex_grid/hex_grid.tscn" id="2_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://bi6bgdalnfs4b" path="res://player/player.tscn" id="3_h2yge"]
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_0xm2m")
+hex_grid_scene = ExtResource("2_0xm2m")
+player_scene = ExtResource("3_h2yge")

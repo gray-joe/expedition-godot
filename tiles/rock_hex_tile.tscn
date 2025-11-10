@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bn5ccannytxgo"]
+
+[ext_resource type="PackedScene" uid="uid://ctfgtwykywlrc" path="res://rock_hex_tile.glb" id="1_hpieq"]
+
+[node name="RockHexTile" type="Node3D"]
+
+[node name="rock_hex_tile" parent="." instance=ExtResource("1_hpieq")]
