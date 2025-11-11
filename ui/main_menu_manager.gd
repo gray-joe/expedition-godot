@@ -11,6 +11,7 @@ const BUTTON_WIDTH_RATIO = 0.6
 const BUTTON_HEIGHT_RATIO = 0.04
 
 @onready var start_game_button: Button
+@onready var player_count_selector: OptionButton
 
 var main_menu: Node3D = null
 
@@ -28,7 +29,7 @@ func _setup_ui() -> void:
 func _setup_responsive_ui() -> void:
 	var screen_size = get_viewport().get_visible_rect().size
 	var panel_width = int(screen_size.x * PANEL_WIDTH_RATIO)
-	var panel_height = int(screen_size.y * PANEL_HEIGHT_RATIO)
+	#var panel_height = int(screen_size.y * PANEL_HEIGHT_RATIO)
 	var margin = int(screen_size.x * MARGIN_RATIO)
 	var separation = int(screen_size.y * SEPARATION_RATIO)
 	
@@ -40,8 +41,8 @@ func _setup_responsive_ui() -> void:
 	add_child(vbox)
 	
 	var base_font_size = int(screen_size.y * BASE_FONT_RATIO)
-	var title_font_size = int(base_font_size * 1.2)
-	var button_font_size = int(base_font_size * 0.8)
+	#var title_font_size = int(base_font_size * 1.2)
+	#var button_font_size = int(base_font_size * 0.8)
 	
 	start_game_button = Button.new()
 	start_game_button.text = "Start Game"
@@ -51,6 +52,19 @@ func _setup_responsive_ui() -> void:
 	start_game_button.add_theme_font_size_override("font_size", base_font_size)
 	vbox.add_child(start_game_button)
 
+	player_count_selector = OptionButton.new()
+	player_count_selector.add_item("1")
+	player_count_selector.add_item("2")
+	player_count_selector.add_item("3")
+	player_count_selector.add_item("4")
+	player_count_selector.add_item("5")
+	player_count_selector.add_item("6")
+	player_count_selector.custom_minimum_size = Vector2(button_width, button_height)
+	player_count_selector.add_theme_font_size_override("font_size", base_font_size)
+	var popup_menu = player_count_selector.get_popup()
+	popup_menu.add_theme_font_size_override("font_size", base_font_size)
+	vbox.add_child(player_count_selector)
+
 func _connect_signals() -> void:
 	if start_game_button:
 		start_game_button.pressed.connect(_on_start_game_button_pressed)
@@ -58,6 +72,10 @@ func _connect_signals() -> void:
 		print("UIMainMenuManager: Error - Start game turn button not found!")
 
 func _on_start_game_button_pressed() -> void:
+	var selected_text = player_count_selector.get_item_text(player_count_selector.get_selected())
+	var player_count = int(selected_text)
+	print("Player count is: ", player_count)
+	game_data.player_count = player_count
 	start_game_requested.emit()
 
 func _on_viewport_size_changed() -> void:
@@ -69,4 +87,3 @@ func _on_viewport_size_changed() -> void:
 func set_start_game_enabled(enabled: bool) -> void:
 	if start_game_button:
 		start_game_button.disabled = not enabled
-

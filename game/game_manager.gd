@@ -60,7 +60,7 @@ func _spawn_players() -> void:
 		print("GameManager: Error - No starting tiles found!")
 		return
 	
-	for i in range(starting_tiles.size()):
+	for i in range(game_data.player_count):
 		var player = player_scene.instantiate()
 		player.name = "Player_" + str(i + 1)
 		
