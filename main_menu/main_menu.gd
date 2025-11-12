@@ -2,7 +2,7 @@ extends Control
 
 @export var game_scene: PackedScene
 
-var ui_main_menu_manager: UIMainMenuManager = null
+var main_menu_ui: MainMenuUI = null
 
 func _ready() -> void:
 	_setup_ui()
@@ -14,6 +14,6 @@ func _on_start_button_pressed() -> void:
 		print("MainMenu: Error - No game scene assigned!")
 
 func _setup_ui() -> void:
-	ui_main_menu_manager = UIMainMenuManager.new()
-	add_child(ui_main_menu_manager)
-	ui_main_menu_manager.start_game_requested.connect(_on_start_button_pressed)
+	main_menu_ui = MainMenuUI.new()
+	add_child(main_menu_ui)
+	main_menu_ui.start_game_requested.connect(_on_start_button_pressed)

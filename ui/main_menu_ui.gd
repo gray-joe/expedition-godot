@@ -1,6 +1,6 @@
 extends Control
 
-class_name UIMainMenuManager
+class_name MainMenuUI
 
 const PANEL_WIDTH_RATIO = 1
 const PANEL_HEIGHT_RATIO = 1

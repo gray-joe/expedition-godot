@@ -1,6 +1,6 @@
 extends Control
 
-class_name UIManager
+class_name InGameUI
 
 const PANEL_WIDTH_RATIO = 0.2
 const PANEL_HEIGHT_RATIO = 0.25
@@ -119,7 +119,7 @@ func _connect_signals() -> void:
 	if end_turn_button:
 		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 	else:
-		print("UIManager: Error - End turn button not found!")
+		print("InGameUI: Error - End turn button not found!")
 
 func _on_end_turn_button_pressed() -> void:
 	end_turn_requested.emit()

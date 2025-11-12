@@ -13,7 +13,7 @@ var current_state: GameState = GameState.SETUP
 var players: Array[Node3D] = []
 var current_player_index: int = 0
 var hex_grid: Node3D
-var ui_manager: UIManager = null
+var in_game_ui: InGameUI = null
 var current_turn: int = 1
 
 func _ready() -> void:
@@ -32,10 +32,10 @@ func _initialize_game() -> void:
 	start_game()
 
 func _setup_ui() -> void:
-	ui_manager = UIManager.new()
-	add_child(ui_manager)
+	in_game_ui = InGameUI.new()
+	add_child(in_game_ui)
 	
-	ui_manager.end_turn_requested.connect(_on_end_turn_requested)
+	in_game_ui.end_turn_requested.connect(_on_end_turn_requested)
 
 func start_game() -> void:
 	current_state = GameState.SETUP
@@ -104,19 +104,19 @@ func _start_turn() -> void:
 		if current_player.has_method("start_turn"):
 			current_player.start_turn()
 		
-		if ui_manager:
-			ui_manager.update_current_player(current_player.name, current_turn)
-			ui_manager.set_end_turn_enabled(true)
+		if in_game_ui:
+			in_game_ui.update_current_player(current_player.name, current_turn)
+			in_game_ui.set_end_turn_enabled(true)
 			
 			if current_player.has_method("get_turn_manager"):
 				var turn_manager = current_player.get_turn_manager()
-				ui_manager.set_turn_manager(turn_manager)
-				ui_manager.reset_turn_timer()
+				in_game_ui.set_turn_manager(turn_manager)
+				in_game_ui.reset_turn_timer()
 			
 			# Connect player movement signals and update movement display
 			if current_player.has_method("get_movement_info"):
 				var movement_info = current_player.get_movement_info()
-				ui_manager.update_movement_remaining(movement_info.movement_speed, movement_info.movement_cost_spent)
+				in_game_ui.update_movement_remaining(movement_info.movement_speed, movement_info.movement_cost_spent)
 			
 			# Connect to player_moved signal to update movement remaining
 			if current_player.has_signal("player_moved"):
@@ -155,9 +155,9 @@ func _on_end_turn_requested() -> void:
 
 func _on_player_moved(_new_position: Vector2i) -> void:
 	var current_player = get_current_player()
-	if current_player and current_player.has_method("get_movement_info") and ui_manager:
+	if current_player and current_player.has_method("get_movement_info") and in_game_ui:
 		var movement_info = current_player.get_movement_info()
-		ui_manager.update_movement_remaining(movement_info.movement_speed, movement_info.movement_cost_spent)
+		in_game_ui.update_movement_remaining(movement_info.movement_speed, movement_info.movement_cost_spent)
 
 func get_current_player() -> Node3D:
 	if players.is_empty():
