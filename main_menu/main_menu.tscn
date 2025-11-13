@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://b5xlid7yt0lax"]
 
 [ext_resource type="Script" uid="uid://bnq40752yjqn8" path="res://main_menu/main_menu.gd" id="1_06t4h"]
-[ext_resource type="PackedScene" uid="uid://e883uk8ksy02" path="res://game/game.tscn" id="2_7vrkn"]
+[ext_resource type="PackedScene" uid="uid://bajo7ptxtwoyy" path="res://pre_game/pre_game.tscn" id="2_d3a7t"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -9,4 +9,4 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("1_06t4h")
-game_scene = ExtResource("2_7vrkn")
+pre_game_scene = ExtResource("2_d3a7t")

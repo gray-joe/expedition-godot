@@ -21,6 +21,7 @@ func _ready() -> void:
 
 func _initialize_game() -> void:
 	_setup_ui()
+	print(game_data.player_gear)
 	
 	if hex_grid_scene:
 		hex_grid = hex_grid_scene.instantiate()
@@ -80,6 +81,7 @@ func _spawn_players() -> void:
 		
 		var success = hex_grid.spawn_player_on_starting_tile(player, starting_tiles[i])
 		if success:
+			print('Player created with data: ', player.get_player_info())
 			pass
 		else:
 			print("GameManager: Failed to place player ", i + 1, " on starting tile")

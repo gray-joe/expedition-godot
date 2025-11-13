@@ -6,6 +6,7 @@ class_name Player
 @export var starting_tile_type: String = "starting"
 @export var player_id: int = 0
 @export var max_turn_duration: float = 0.0
+@export var player_gear: Dictionary
 
 var player_data: PlayerData
 var movement_validator: MovementValidator
@@ -144,7 +145,8 @@ func get_player_info() -> Dictionary:
 		"position": Vector2i(-1, -1),
 		"movement_speed": movement_speed,
 		"is_active": false,
-		"turn_active": false
+		"turn_active": false,
+		"player_gear": player_gear,
 	}
 	
 	if player_data:
@@ -153,10 +155,10 @@ func get_player_info() -> Dictionary:
 		info.position = player_data.get_grid_position()
 		info.movement_speed = player_data.movement_speed
 		info.is_active = player_data.is_active
+		info.player_gear = player_data.player_gear
 	
 	if turn_manager:
 		info.turn_active = turn_manager.get_turn_active()
-		# Add turn info
 		var turn_info = turn_manager.get_turn_info()
 		info.turn_duration = turn_info.duration
 		info.remaining_time = turn_info.remaining_time
