@@ -21,7 +21,6 @@ func _ready() -> void:
 
 func _initialize_game() -> void:
 	_setup_ui()
-	print(game_data.player_gear)
 	
 	if hex_grid_scene:
 		hex_grid = hex_grid_scene.instantiate()
@@ -76,7 +75,13 @@ func _spawn_players() -> void:
 
 		if player.has_method("initialize"):
 			player.initialize(hex_grid)
+
+		if player.has_method("get_gear_weight"):
+			player.get_gear_weight()
 		
+		if player.has_method("calculate_movement_speed"):
+			player.calculate_movement_speed()
+
 		players.append(player)
 		
 		var success = hex_grid.spawn_player_on_starting_tile(player, starting_tiles[i])

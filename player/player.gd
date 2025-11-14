@@ -6,7 +6,8 @@ class_name Player
 @export var starting_tile_type: String = "starting"
 @export var player_id: int = 0
 @export var max_turn_duration: float = 0.0
-@export var player_gear: Dictionary
+@export var gear: Dictionary
+@export var gear_weight: float = 0.0
 
 var player_data: PlayerData
 var movement_validator: MovementValidator
@@ -53,13 +54,13 @@ func set_player_id(new_id: int) -> void:
 	player_id = new_id
 	if player_data:
 		player_data.player_id = new_id
-
+		
 func move_to(target_position: Vector2i) -> bool:
 	if not turn_manager or not turn_manager.can_perform_action():
 		print("Player: ", player_name, " cannot move - not their turn")
 		return false
 	
-	if not movement_controller or not movement_controller.move_to(target_position, movement_cost_spent_this_turn, movement_speed):
+	if not movement_controller or not movement_controller.move_to(target_position, movement_cost_spent_this_turn, player_data.movement_speed):
 		print("Player: ", player_name, " cannot move to: ", target_position)
 		return false
 	
@@ -79,7 +80,7 @@ func move_to(target_position: Vector2i) -> bool:
 func can_move_to(target_position: Vector2i) -> bool:
 	if movement_validator and player_data:
 		var adjacent_tiles = player_data.get_adjacent_tiles()
-		return movement_validator.can_move_to(target_position, adjacent_tiles, movement_cost_spent_this_turn, movement_speed)
+		return movement_validator.can_move_to(target_position, adjacent_tiles, movement_cost_spent_this_turn, player_data.movement_speed)
 	return false
 
 func start_turn() -> void:
@@ -132,9 +133,41 @@ func set_grid_position(new_position: Vector2i) -> void:
 		player_data.set_position(new_position)
 		player_moved.emit(new_position)
 
+func get_gear_weight():
+	print(player_data.gear)
+	var total_weight: float = 0.0
+
+	for gear_type in player_data.gear.keys():
+		print("gear_type: ", gear_type)
+		var item = player_data.gear[gear_type]
+
+		match gear_type:
+			"extras":
+				for extra_name in item:
+					for extra_id in game_data.extras.keys():
+						if game_data.extras[extra_id]["name"] == extra_name:
+							total_weight += game_data.extras[extra_id]["weight"]
+							break
+			"tent":
+				for tent_id in game_data.tents.keys():
+					if game_data.tents[tent_id]["name"] == item:
+						total_weight += game_data.tents[tent_id]["weight"]
+						break
+			"sleeping_bag":
+				for sleeping_bag_id in game_data.sleeping_bags.keys():
+					if game_data.sleeping_bags[sleeping_bag_id]["name"] == item:
+						total_weight += game_data.sleeping_bags[sleeping_bag_id]["weight"]
+						break
+
+	player_data.gear_weight = total_weight
+
+func calculate_movement_speed():
+	var new_ms = movement_speed - player_data.gear_weight
+	player_data.movement_speed = new_ms
+
 func get_movement_info() -> Dictionary:
 	return {
-		"movement_speed": movement_speed,
+		"movement_speed": player_data.movement_speed,
 		"movement_cost_spent": movement_cost_spent_this_turn
 	}
 
@@ -143,10 +176,11 @@ func get_player_info() -> Dictionary:
 		"name": player_name,
 		"id": player_id,
 		"position": Vector2i(-1, -1),
-		"movement_speed": movement_speed,
+		"movement_speed": player_data.movement_speed,
 		"is_active": false,
 		"turn_active": false,
-		"player_gear": player_gear,
+		"gear": gear,
+		"gear_weight": gear_weight
 	}
 	
 	if player_data:
@@ -155,7 +189,8 @@ func get_player_info() -> Dictionary:
 		info.position = player_data.get_grid_position()
 		info.movement_speed = player_data.movement_speed
 		info.is_active = player_data.is_active
-		info.player_gear = player_data.player_gear
+		info.gear = player_data.gear
+		info.gear_weight = player_data.gear_weight
 	
 	if turn_manager:
 		info.turn_active = turn_manager.get_turn_active()

@@ -8,15 +8,17 @@ var movement_speed: float
 var starting_tile_type: String
 var is_active: bool = false
 var player_id: int
-var player_gear: Dictionary
+var gear: Dictionary
+var gear_weight: float = 0.0
 
 func _init(p_name: String, p_id: int, p_speed: float = 8.0, p_starting_type: String = "starting"):
 	name = p_name
 	player_id = p_id
 	position = Vector2i(-1, -1)
-	movement_speed = p_speed
 	starting_tile_type = p_starting_type
-	player_gear = game_data.player_gear[p_id]
+	gear = game_data.player_gear[p_id]
+	gear_weight = 0.0
+	movement_speed = p_speed
 
 func set_position(new_position: Vector2i) -> void:
 	position = new_position

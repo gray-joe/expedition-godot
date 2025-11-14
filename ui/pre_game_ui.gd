@@ -14,7 +14,7 @@ const BUTTON_HEIGHT_RATIO = 0.04
 @onready var player_label: Label
 @onready var tent_selector: OptionButton
 @onready var sleeping_bag_selector: OptionButton
-@onready var extras_selector: OptionButton
+@onready var extras_selector: Button
 
 var player_selectors = {}
 
@@ -68,8 +68,9 @@ func _setup_responsive_ui() -> void:
 		var selectors = {}
 
 		tent_selector = OptionButton.new()
-		tent_selector.add_item("Heavy / all seasons")
-		tent_selector.add_item("Light / 2 seasons")
+		for tent_id in game_data.tents.keys():
+			var tent_data = game_data.tents[tent_id]
+			tent_selector.add_item(tent_data["name"])
 		tent_selector.custom_minimum_size = Vector2(button_width / 3.0, button_height)
 		tent_selector.add_theme_font_size_override("font_size", base_font_size)
 		var tent_popup_menu = tent_selector.get_popup()
@@ -78,8 +79,9 @@ func _setup_responsive_ui() -> void:
 		selectors["tent"] = tent_selector
 
 		sleeping_bag_selector = OptionButton.new()
-		sleeping_bag_selector.add_item("Heavy / all seasons")
-		sleeping_bag_selector.add_item("Light / 2 seasons")
+		for sleeping_bag_id in game_data.sleeping_bags.keys():
+			var sleeping_bag_data = game_data.sleeping_bags[sleeping_bag_id]
+			sleeping_bag_selector.add_item(sleeping_bag_data["name"])
 		sleeping_bag_selector.custom_minimum_size = Vector2(button_width / 3.0, button_height)
 		sleeping_bag_selector.add_theme_font_size_override("font_size", base_font_size)
 		var sleeping_bag_popup_menu = sleeping_bag_selector.get_popup()
@@ -87,16 +89,20 @@ func _setup_responsive_ui() -> void:
 		player_box.add_child(sleeping_bag_selector)
 		selectors["sleeping_bag"] = sleeping_bag_selector
 
-		extras_selector = OptionButton.new()
-		extras_selector.add_item("Extra water")
-		extras_selector.add_item("Extra food")
-		extras_selector.add_item("Extra socks")
+		extras_selector = Button.new()
+		extras_selector.text = "Select Extras"
 		extras_selector.custom_minimum_size = Vector2(button_width / 3.0, button_height)
 		extras_selector.add_theme_font_size_override("font_size", base_font_size)
-		var extras_popup_menu = extras_selector.get_popup()
+		var extras_popup_menu = PopupMenu.new()
 		extras_popup_menu.add_theme_font_size_override("font_size", base_font_size)
+		extras_selector.add_child(extras_popup_menu)
+		for extras_id in game_data.extras.keys():
+			var extras_data = game_data.extras[extras_id]
+			extras_popup_menu.add_check_item(extras_data["name"])
+		extras_selector.connect("pressed", Callable(self, "_on_extras_button_pressed").bind(extras_popup_menu))
+		extras_popup_menu.connect("id_pressed", Callable(self, "_on_extras_item_pressed").bind(extras_selector))
 		player_box.add_child(extras_selector)
-		selectors["extras"] = extras_selector
+		selectors["extras"] = extras_popup_menu
 		
 		player_selectors[i+1] = selectors
 
@@ -126,5 +132,28 @@ func get_gear_selection():
 		var gear = {}
 		for gear_type in player_selectors[player_id].keys():
 			var selector = player_selectors[player_id][gear_type]
-			gear[gear_type] = selector.get_item_text(selector.get_selected())
-			game_data.player_gear[player_id] = gear
+			if gear_type == "extras":
+				var selected_extras = []
+				for extra in range(selector.item_count):
+					if selector.is_item_checked(extra):
+						selected_extras.append(selector.get_item_text(extra))
+						gear[gear_type] = selected_extras
+			else:
+				gear[gear_type] = selector.get_item_text(selector.get_selected())
+
+		game_data.player_gear[player_id] = gear
+
+func _on_extras_button_pressed(popup: PopupMenu):
+	popup.popup()
+
+func _on_extras_item_pressed(id: int, button: Button):
+	var popup = button.get_child(0) as PopupMenu
+	popup.toggle_item_checked(id)
+	_update_extras_button_text(button, popup)
+
+func _update_extras_button_text(button: Button, popup: PopupMenu):
+	var selected = []
+	for i in range(popup.item_count):
+		if popup.is_item_checked(i):
+			selected.append(popup.get_item_text(i))
+	button.text = "Extras: " + (", ".join(selected) if selected.size() > 0 else "None")
