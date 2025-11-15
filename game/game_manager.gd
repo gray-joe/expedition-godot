@@ -6,6 +6,12 @@ enum GameState {
 	END
 }
 
+enum TurnPhase {
+	MORNING,
+	AFTERNOON,
+	NIGHT
+}
+
 @export var hex_grid_scene: PackedScene
 @export var player_scene: PackedScene
 
@@ -15,6 +21,7 @@ var current_player_index: int = 0
 var hex_grid: Node3D
 var in_game_ui: InGameUI = null
 var current_turn: int = 1
+var current_phase: TurnPhase = TurnPhase.MORNING
 
 func _ready() -> void:
 	_initialize_game()
@@ -39,6 +46,9 @@ func _setup_ui() -> void:
 
 func start_game() -> void:
 	current_state = GameState.SETUP
+	current_turn = 1
+	current_phase = TurnPhase.MORNING
+	current_player_index = 0
 	
 	await get_tree().process_frame
 	_spawn_players()
@@ -112,7 +122,7 @@ func _start_turn() -> void:
 			current_player.start_turn()
 		
 		if in_game_ui:
-			in_game_ui.update_current_player(current_player.name, current_turn)
+			in_game_ui.update_current_player(current_player.name, current_turn, current_phase)
 			in_game_ui.set_end_turn_enabled(true)
 			
 			if current_player.has_method("get_turn_manager"):
@@ -120,12 +130,10 @@ func _start_turn() -> void:
 				in_game_ui.set_turn_manager(turn_manager)
 				in_game_ui.reset_turn_timer()
 			
-			# Connect player movement signals and update movement display
 			if current_player.has_method("get_movement_info"):
 				var movement_info = current_player.get_movement_info()
 				in_game_ui.update_movement_remaining(movement_info.movement_speed, movement_info.movement_cost_spent)
 			
-			# Connect to player_moved signal to update movement remaining
 			if current_player.has_signal("player_moved"):
 				if not current_player.player_moved.is_connected(_on_player_moved):
 					current_player.player_moved.connect(_on_player_moved)
@@ -139,7 +147,6 @@ func next_turn() -> void:
 	
 	var current_player = get_current_player()
 	
-	# Disconnect from previous player's signals
 	if current_player and current_player.has_signal("player_moved"):
 		if current_player.player_moved.is_connected(_on_player_moved):
 			current_player.player_moved.disconnect(_on_player_moved)
@@ -153,7 +160,9 @@ func next_turn() -> void:
 	current_player_index = (current_player_index + 1) % players.size()
 	
 	if current_player_index == 0:
-		current_turn += 1
+		current_phase = (current_phase + 1) % TurnPhase.size()
+		if current_phase == TurnPhase.MORNING:
+			current_turn += 1
 	
 	_start_turn()
 
@@ -173,6 +182,17 @@ func get_current_player() -> Node3D:
 
 func get_current_state() -> GameState:
 	return current_state
+
+func get_phase_name() -> String:
+	match current_phase:
+		TurnPhase.MORNING:
+			return "Morning Move"
+		TurnPhase.AFTERNOON:
+			return "Afternoon Move"
+		TurnPhase.NIGHT:
+			return "Night Action"
+		_:
+			return "Unknown"
 
 func is_game_active() -> bool:
 	return current_state == GameState.IN_GAME

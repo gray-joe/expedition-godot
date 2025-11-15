@@ -16,6 +16,7 @@ const BUTTON_HEIGHT_RATIO = 0.04
 @onready var end_turn_button: Button
 @onready var turn_info_panel: Panel
 @onready var turn_label: Label
+@onready var phase_label: Label
 @onready var movement_instruction_label: Label
 @onready var turn_timer_label: Label
 @onready var turn_progress_bar: ProgressBar
@@ -80,6 +81,13 @@ func _setup_responsive_ui() -> void:
 	turn_label.add_theme_font_size_override("font_size", base_font_size)
 	turn_vbox.add_child(turn_label)
 	
+	phase_label = Label.new()
+	phase_label.name = "PhaseLabel"
+	phase_label.text = "Phase: Morning Move"
+	phase_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	phase_label.add_theme_font_size_override("font_size", base_font_size)
+	turn_vbox.add_child(phase_label)
+	
 	movement_instruction_label = Label.new()
 	movement_instruction_label.text = "Click a tile to move"
 	movement_instruction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -130,12 +138,26 @@ func _on_viewport_size_changed() -> void:
 	_setup_responsive_ui()
 	_connect_signals()
 
-func update_current_player(player_name: String, turn_number: int) -> void:
+func update_current_player(player_name: String, turn_number: int, phase: int = 0) -> void:
 	if current_player_label:
 		current_player_label.text = "Current Player: " + player_name
 	
 	if turn_label:
 		turn_label.text = "Turn: " + str(turn_number)
+
+	if phase_label:
+		match phase:
+			0:
+				phase_label.text = "Phase: Morning Move"
+				movement_instruction_label.text = "Click a tile to move!"
+			1:
+				phase_label.text = "Phase: Afternoon Move"
+				movement_instruction_label.text = "Click a tile to move!"
+			2:
+				phase_label.text = "Phase: Night Action"
+				movement_instruction_label.text = "Take an action card"
+			_:
+				phase_label.text = "Phase: Unknown"
 
 func set_end_turn_enabled(enabled: bool) -> void:
 	if end_turn_button:
