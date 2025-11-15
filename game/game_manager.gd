@@ -160,7 +160,7 @@ func next_turn() -> void:
 	current_player_index = (current_player_index + 1) % players.size()
 	
 	if current_player_index == 0:
-		current_phase = (current_phase + 1) % TurnPhase.size()
+		current_phase = ((current_phase + 1) % TurnPhase.size()) as TurnPhase
 		if current_phase == TurnPhase.MORNING:
 			current_turn += 1
 	
