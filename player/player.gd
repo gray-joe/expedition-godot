@@ -109,6 +109,7 @@ func get_turn_manager() -> TurnManager:
 	return turn_manager
 
 func set_turn_duration(duration: float) -> void:
+	max_turn_duration = duration
 	if turn_manager:
 		turn_manager.set_max_turn_duration(duration)
 
