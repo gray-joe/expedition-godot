@@ -1,6 +1,6 @@
 extends Control
 
-@export var pre_game_scene: PackedScene
+@export var skill_card_allocation_scene: PackedScene
 
 var main_menu_ui: MainMenuUI = null
 
@@ -8,10 +8,10 @@ func _ready() -> void:
 	_setup_ui()
 
 func _on_start_button_pressed() -> void:
-	if pre_game_scene:
-		get_tree().change_scene_to_packed(pre_game_scene)
+	if skill_card_allocation_scene:
+		get_tree().change_scene_to_packed(skill_card_allocation_scene)
 	else:
-		print("MainMenu: Error - No pre-game scene assigned!")
+		print("MainMenu: Error - No skill card allocation scene assigned!")
 
 func _setup_ui() -> void:
 	main_menu_ui = MainMenuUI.new()

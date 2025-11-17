@@ -1,9 +1,9 @@
 [gd_scene load_steps=3 format=3 uid="uid://bajo7ptxtwoyy"]
 
-[ext_resource type="Script" uid="uid://b1rxg4jk362fn" path="res://pre_game/pre_game.gd" id="1_xi1sp"]
+[ext_resource type="Script" uid="uid://b1rxg4jk362fn" path="res://gear_selection/gear_selection.gd" id="1_xi1sp"]
 [ext_resource type="PackedScene" uid="uid://e883uk8ksy02" path="res://game/game.tscn" id="2_ul6to"]
 
-[node name="PreGame" type="Control"]
+[node name="GearSelection" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://c8k3nan2p5q7r"]
+
+[ext_resource type="Script" path="res://skill_card/skill_card_allocation.gd" id="1_skill"]
+[ext_resource type="PackedScene" uid="uid://bajo7ptxtwoyy" path="res://gear_selection/gear_selection.tscn" id="2_gear"]
+
+[node name="SkillCardAllocation" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_skill")
+gear_selection_scene = ExtResource("2_gear")
+

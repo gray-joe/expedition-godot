@@ -1,6 +1,6 @@
 extends Control
 
-class_name PreGameUI
+class_name GearSelectionUI
 
 const PANEL_WIDTH_RATIO = 1
 const PANEL_HEIGHT_RATIO = 1
