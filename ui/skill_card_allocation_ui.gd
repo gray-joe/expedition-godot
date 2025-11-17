@@ -26,7 +26,6 @@ func _ready() -> void:
 	description_dialog = AcceptDialog.new()
 	description_dialog.title = "Skill Card Description"
 	
-	# Create RichTextLabel for better text formatting
 	description_label = RichTextLabel.new()
 	description_label.bbcode_enabled = true
 	description_label.fit_content = true
@@ -148,7 +147,6 @@ func _on_viewport_size_changed() -> void:
 	
 	if saved_dialog and saved_dialog.get_parent() != self:
 		add_child(saved_dialog)
-		# Re-add label if it was removed
 		if saved_label and saved_label.get_parent() != saved_dialog:
 			saved_dialog.add_child(saved_label)
 	
@@ -205,12 +203,10 @@ func show_skill_card_description(player_id: int) -> void:
 	
 	var selected_text = selector.get_item_text(selector.get_selected())
 	
-	# Set dialog size as percentage of viewport
 	var viewport_size = get_viewport().get_visible_rect().size
 	var dialog_size = Vector2i(int(viewport_size.x * 0.4), int(viewport_size.y * 0.3))
 	description_dialog.size = dialog_size
 	
-	# Calculate font size based on viewport
 	var base_font_size = int(viewport_size.y * 0.02)
 	
 	if selected_text == "None":

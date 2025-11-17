@@ -142,7 +142,7 @@ func _input(event: InputEvent) -> void:
 			_handle_tile_click(event.position)
 
 func _is_click_on_ui(mouse_position: Vector2) -> bool:
-	var ui_rect = Rect2(20, 20, 300, 150)  # Slightly larger to be safe
+	var ui_rect = Rect2(20, 20, 300, 150)
 	return ui_rect.has_point(mouse_position)
 
 func _handle_tile_click(mouse_position: Vector2) -> void:
@@ -278,11 +278,9 @@ func get_tile_config(tile_type: String) -> TileConfig:
 	return TILE_CONFIGS.get(tile_type)
 
 func get_tile_config_at(grid_pos: Vector2i) -> TileConfig:
-	# Starting tiles live outside the main grid; check those first
 	for start_pos in starting_tile_positions:
 		if grid_pos == start_pos:
 			return TILE_CONFIGS.get("starting")
-	# In-bounds tiles
 	var tile_type := get_tile_type_at(grid_pos)
 	if tile_type == "":
 		return null
@@ -299,7 +297,6 @@ func spawn_player_on_starting_tile(player_instance: Node3D, starting_tile_pos: V
 		players.append(player_instance)
 		add_child(player_instance)
 		
-		# Place the player using the actual starting tile coordinate (outside ring)
 		var world_pos = _grid_to_world_position(starting_tile_pos)
 		player_instance.position = world_pos
 		

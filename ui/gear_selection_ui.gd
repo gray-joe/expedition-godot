@@ -17,6 +17,8 @@ const BUTTON_HEIGHT_RATIO = 0.04
 @onready var extras_selector: Button
 
 var player_selectors = {}
+var extras_dialogs = {}
+var extras_checkboxes = {}
 
 var main_menu: Node3D = null
 
@@ -25,6 +27,40 @@ signal start_game_requested()
 func _ready() -> void:
 	_setup_ui()
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
+
+func _create_extras_dialog(player_id: int) -> AcceptDialog:
+	var dialog = AcceptDialog.new()
+	dialog.title = "Select Extras - Player " + str(player_id)
+	
+	var viewport_size = get_viewport().get_visible_rect().size
+	var dialog_size = Vector2i(int(viewport_size.x * 0.4), int(viewport_size.y * 0.4))
+	dialog.size = dialog_size
+	
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var margin = 20
+	vbox.offset_left = margin
+	vbox.offset_right = -margin
+	vbox.offset_top = margin
+	vbox.offset_bottom = -margin
+	vbox.add_theme_constant_override("separation", 10)
+	dialog.add_child(vbox)
+	
+	var base_font_size = int(viewport_size.y * 0.02)
+	var checkboxes = {}
+	
+	for extras_id in game_data.extras.keys():
+		var extras_data = game_data.extras[extras_id]
+		var checkbox = CheckBox.new()
+		checkbox.text = extras_data["name"]
+		checkbox.add_theme_font_size_override("font_size", base_font_size)
+		vbox.add_child(checkbox)
+		checkboxes[extras_id] = checkbox
+	
+	extras_checkboxes[player_id] = checkboxes
+	dialog.confirmed.connect(_on_extras_dialog_confirmed.bind(player_id))
+	
+	return dialog
 
 func _setup_ui() -> void:
 	await get_tree().process_frame
@@ -93,16 +129,14 @@ func _setup_responsive_ui() -> void:
 		extras_selector.text = "Select Extras"
 		extras_selector.custom_minimum_size = Vector2(button_width / 3.0, button_height)
 		extras_selector.add_theme_font_size_override("font_size", base_font_size)
-		var extras_popup_menu = PopupMenu.new()
-		extras_popup_menu.add_theme_font_size_override("font_size", base_font_size)
-		extras_selector.add_child(extras_popup_menu)
-		for extras_id in game_data.extras.keys():
-			var extras_data = game_data.extras[extras_id]
-			extras_popup_menu.add_check_item(extras_data["name"])
-		extras_selector.connect("pressed", Callable(self, "_on_extras_button_pressed").bind(extras_popup_menu))
-		extras_popup_menu.connect("id_pressed", Callable(self, "_on_extras_item_pressed").bind(extras_selector))
+		extras_selector.connect("pressed", Callable(self, "_on_extras_button_pressed").bind(i+1))
 		player_box.add_child(extras_selector)
-		selectors["extras"] = extras_popup_menu
+		
+		var extras_dialog = _create_extras_dialog(i+1)
+		add_child(extras_dialog)
+		extras_dialogs[i+1] = extras_dialog
+		
+		selectors["extras"] = extras_selector
 		
 		player_selectors[i+1] = selectors
 
@@ -118,8 +152,25 @@ func _on_start_game_button_pressed() -> void:
 	start_game_requested.emit()
 
 func _on_viewport_size_changed() -> void:
+	var saved_dialogs = extras_dialogs.duplicate()
+	var saved_checkboxes = extras_checkboxes.duplicate()
+	
+	var children_to_remove = []
 	for child in get_children():
+		if not child in saved_dialogs.values():
+			children_to_remove.append(child)
+	
+	for child in children_to_remove:
 		child.queue_free()
+	
+	for player_id in saved_dialogs.keys():
+		var dialog = saved_dialogs[player_id]
+		if dialog and dialog.get_parent() != self:
+			add_child(dialog)
+	
+	extras_dialogs = saved_dialogs
+	extras_checkboxes = saved_checkboxes
+	
 	_setup_responsive_ui()
 	_connect_signals()
 
@@ -134,26 +185,34 @@ func get_gear_selection():
 			var selector = player_selectors[player_id][gear_type]
 			if gear_type == "extras":
 				var selected_extras = []
-				for extra in range(selector.item_count):
-					if selector.is_item_checked(extra):
-						selected_extras.append(selector.get_item_text(extra))
-						gear[gear_type] = selected_extras
+				var checkboxes = extras_checkboxes.get(player_id, {})
+				for extras_id in checkboxes.keys():
+					if checkboxes[extras_id] and checkboxes[extras_id].button_pressed:
+						selected_extras.append(game_data.extras[extras_id]["name"])
+				gear[gear_type] = selected_extras
 			else:
 				gear[gear_type] = selector.get_item_text(selector.get_selected())
 
 		game_data.player_gear[player_id] = gear
 
-func _on_extras_button_pressed(popup: PopupMenu):
-	popup.popup()
+func _on_extras_button_pressed(player_id: int):
+	var dialog = extras_dialogs.get(player_id)
+	if dialog:
+		var viewport_size = get_viewport().get_visible_rect().size
+		var dialog_size = Vector2i(int(viewport_size.x * 0.4), int(viewport_size.y * 0.4))
+		dialog.size = dialog_size
+		dialog.popup_centered()
 
-func _on_extras_item_pressed(id: int, button: Button):
-	var popup = button.get_child(0) as PopupMenu
-	popup.toggle_item_checked(id)
-	_update_extras_button_text(button, popup)
+func _on_extras_dialog_confirmed(player_id: int):
+	_update_extras_button_text(player_id)
 
-func _update_extras_button_text(button: Button, popup: PopupMenu):
+func _update_extras_button_text(player_id: int):
+	var button = player_selectors[player_id]["extras"]
+	var checkboxes = extras_checkboxes.get(player_id, {})
 	var selected = []
-	for i in range(popup.item_count):
-		if popup.is_item_checked(i):
-			selected.append(popup.get_item_text(i))
+	
+	for extras_id in checkboxes.keys():
+		if checkboxes[extras_id] and checkboxes[extras_id].button_pressed:
+			selected.append(game_data.extras[extras_id]["name"])
+	
 	button.text = "Extras: " + (", ".join(selected) if selected.size() > 0 else "None")
