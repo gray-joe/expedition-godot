@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://b5xlid7yt0lax"]
 
 [ext_resource type="Script" uid="uid://bnq40752yjqn8" path="res://main_menu/main_menu.gd" id="1_06t4h"]
-[ext_resource type="PackedScene" path="res://skill_card/skill_card_allocation.tscn" id="2_skill"]
+[ext_resource type="PackedScene" uid="uid://c8k3nan2p5q7r" path="res://skill_card/skill_card_allocation.tscn" id="2_skill"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3

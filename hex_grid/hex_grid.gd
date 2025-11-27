@@ -13,11 +13,12 @@ const TILE_SCENES = {
 
 const PLAYER_SCENE = preload("res://pieces/player_piece.tscn") 
 
-@export var grid_width := 20
-@export var grid_height := 10
-@export var camera_angle := -70.0
+@export var grid_width := 40
+@export var grid_height := 20
+@export var camera_angle := -50.0
 @export var camera_padding := 1.2
 var grid_data: Array[Array] = []
+var height_data: Array[Array] = []
 var players: Array[Node3D] = []
 var starting_tile_positions: Array[Vector2i] = []
 var current_player: Node3D = null
