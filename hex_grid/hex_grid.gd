@@ -19,9 +19,9 @@ const PLAYER_SCENE = preload("res://pieces/player_piece.tscn")
 @export var camera_padding := 1.2
 var grid_data: Array[Array] = []
 var height_data: Array[Array] = []
-var players: Array[Node3D] = []
+var players: Array[Player] = []
 var starting_tile_positions: Array[Vector2i] = []
-var current_player: Node3D = null
+var current_player: Player = null
 
 func _ready() -> void:
 	_setup_tile_configs()
@@ -119,18 +119,18 @@ func _find_starting_tile() -> Vector2i:
 func get_starting_tiles() -> Array[Vector2i]:
 	return starting_tile_positions.duplicate()
 
-func get_all_players() -> Array[Node3D]:
+func get_all_players() -> Array[Player]:
 	return players.duplicate()
 
 func get_player_count() -> int:
 	return players.size()
 
-func get_player_at_index(index: int) -> Node3D:
+func get_player_at_index(index: int) -> Player:
 	if index >= 0 and index < players.size():
 		return players[index]
 	return null
 
-func set_current_player(player: Node3D) -> void:
+func set_current_player(player: Player) -> void:
 	current_player = player
 	var player_name = player.name if player else "null"
 
@@ -217,7 +217,7 @@ func _get_tile_grid_position(tile: Node3D) -> Vector2i:
 	return Vector2i(-1, -1)
 
 func _attempt_player_movement(grid_pos: Vector2i) -> void:
-	if current_player and current_player.has_method("move_to"):
+	if current_player:
 		var success = current_player.move_to(grid_pos)
 		if success:
 			pass
@@ -290,7 +290,7 @@ func get_tile_config_at(grid_pos: Vector2i) -> TileConfig:
 func grid_to_world_position(grid_pos: Vector2i) -> Vector3:
 	return _grid_to_world_position(grid_pos)
 
-func spawn_player_on_starting_tile(player_instance: Node3D, starting_tile_pos: Vector2i = Vector2i(-1, -1)) -> bool:
+func spawn_player_on_starting_tile(player_instance: Player, starting_tile_pos: Vector2i = Vector2i(-1, -1)) -> bool:
 	if starting_tile_pos == Vector2i(-1, -1):
 		starting_tile_pos = _find_starting_tile()
 	
@@ -301,8 +301,7 @@ func spawn_player_on_starting_tile(player_instance: Node3D, starting_tile_pos: V
 		var world_pos = _grid_to_world_position(starting_tile_pos)
 		player_instance.position = world_pos
 		
-		if player_instance.has_method("set_grid_position"):
-			player_instance.set_grid_position(starting_tile_pos)
+		player_instance.set_grid_position(starting_tile_pos)
 		
 		return true
 	else:
