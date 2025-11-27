@@ -71,9 +71,13 @@ func _spawn_players() -> void:
 		return
 	
 	for i in range(game_data.player_count):
+		var player_data = PlayerData.new("Player " + str(i + 1), i + 1, 8.0, "starting", 30.0)
+		
+		player_data.calculate_gear_weight()
+		player_data.calculate_movement_speed()
+		
 		var player_node = player_scene.instantiate()
 		
-		# Cast to Player type - ensure the scene instantiates a Player
 		if not player_node is Player:
 			print("GameManager: Error - Player scene does not instantiate a Player node!")
 			continue
@@ -81,12 +85,7 @@ func _spawn_players() -> void:
 		var player: Player = player_node as Player
 		player.name = "Player_" + str(i + 1)
 		
-		player.set_player_name("Player " + str(i + 1))
-		player.set_player_id(i + 1)
-		player.set_turn_duration(30.0)
-		player.initialize(hex_grid)
-		player.get_gear_weight()
-		player.calculate_movement_speed()
+		player.initialize(hex_grid, player_data)
 
 		players.append(player)
 		

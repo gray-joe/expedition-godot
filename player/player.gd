@@ -1,13 +1,11 @@
 extends Node3D
 class_name Player
 
-@export var player_name: String = "Player"
-@export var movement_speed: float = 8.0
-@export var starting_tile_type: String = "starting"
-@export var player_id: int = 0
-@export var max_turn_duration: float = 0.0
-@export var gear: Dictionary
-@export var gear_weight: float = 0.0
+@export var _editor_player_name: String = "Player"
+@export var _editor_movement_speed: float = 8.0
+@export var _editor_starting_tile_type: String = "starting"
+@export var _editor_player_id: int = 0
+@export var _editor_max_turn_duration: float = 0.0
 
 var player_data: PlayerData
 var movement_validator: MovementValidator
@@ -27,47 +25,58 @@ func _ready() -> void:
 
 func _initialize_components() -> void:
 	if not player_data:
-		player_data = PlayerData.new(player_name, player_id, movement_speed, starting_tile_type)
+		player_data = PlayerData.new(_editor_player_name, _editor_player_id, _editor_movement_speed, _editor_starting_tile_type, _editor_max_turn_duration)
 	
-	turn_manager = TurnManager.new(max_turn_duration)
+	turn_manager = TurnManager.new(player_data.max_turn_duration)
 	
 	turn_manager.turn_started.connect(_on_turn_started)
 	turn_manager.turn_ended.connect(_on_turn_ended)
 	turn_manager.turn_timeout.connect(_on_turn_timeout)
 
-func initialize(grid: Node3D) -> void:
+func initialize(grid: Node3D, data: PlayerData = null) -> void:
 	hex_grid = grid
 	
-	if not player_data:
-		print("Player: ", player_name, " - player_data not initialized, creating now")
-		player_data = PlayerData.new(player_name, player_id, movement_speed, starting_tile_type)
+	if data:
+		player_data = data
+	elif not player_data:
+		player_data = PlayerData.new(_editor_player_name, _editor_player_id, _editor_movement_speed, _editor_starting_tile_type, _editor_max_turn_duration)
+	
+	if turn_manager:
+		turn_manager.set_max_turn_duration(player_data.max_turn_duration)
+	else:
+		turn_manager = TurnManager.new(player_data.max_turn_duration)
+		turn_manager.turn_started.connect(_on_turn_started)
+		turn_manager.turn_ended.connect(_on_turn_ended)
+		turn_manager.turn_timeout.connect(_on_turn_timeout)
 	
 	movement_validator = MovementValidator.new(hex_grid)
 	movement_controller = MovementController.new(player_data, hex_grid)
 
 func set_player_name(new_name: String) -> void:
-	player_name = new_name
-	if player_data:
-		player_data.name = new_name
+	if not player_data:
+		_initialize_components()
+	player_data.name = new_name
 
 func set_player_id(new_id: int) -> void:
-	player_id = new_id
-	if player_data:
-		player_data.player_id = new_id
+	if not player_data:
+		_initialize_components()
+	player_data.player_id = new_id
 		
 func move_to(target_position: Vector2i) -> bool:
+	if not player_data:
+		_initialize_components()
+	
 	if not turn_manager or not turn_manager.can_perform_action():
-		print("Player: ", player_name, " cannot move - not their turn")
+		print("Player: ", player_data.name, " cannot move - not their turn")
 		return false
 	
 	if not movement_controller or not movement_controller.move_to(target_position, movement_cost_spent_this_turn, player_data.movement_speed):
-		print("Player: ", player_name, " cannot move to: ", target_position)
+		print("Player: ", player_data.name, " cannot move to: ", target_position)
 		return false
 	
 	if hex_grid:
 		var target_world_pos = hex_grid.grid_to_world_position(target_position)
 		global_position = target_world_pos
-		# Accumulate movement cost for the tile we landed on
 		if hex_grid.has_method("get_tile_config_at"):
 			var tile_config = hex_grid.get_tile_config_at(target_position)
 			if tile_config:
@@ -84,16 +93,21 @@ func can_move_to(target_position: Vector2i) -> bool:
 	return false
 
 func start_turn() -> void:
-	if turn_manager:
-		turn_manager.start_turn()
-	else:
-		print("Player: ", player_name, " - turn_manager not initialized!")
+	if not turn_manager:
+		if not player_data:
+			_initialize_components()
+		else:
+			turn_manager = TurnManager.new(player_data.max_turn_duration)
+			turn_manager.turn_started.connect(_on_turn_started)
+			turn_manager.turn_ended.connect(_on_turn_ended)
+			turn_manager.turn_timeout.connect(_on_turn_timeout)
+	turn_manager.start_turn()
 
 func end_turn() -> void:
-	if turn_manager:
-		turn_manager.end_turn()
-	else:
-		print("Player: ", player_name, " - turn_manager not initialized!")
+	if not turn_manager:
+		print("Player: ", player_data.name if player_data else "Unknown", " - turn_manager not initialized!")
+		return
+	turn_manager.end_turn()
 
 func is_turn_active() -> bool:
 	if turn_manager:
@@ -109,7 +123,9 @@ func get_turn_manager() -> TurnManager:
 	return turn_manager
 
 func set_turn_duration(duration: float) -> void:
-	max_turn_duration = duration
+	if not player_data:
+		_initialize_components()
+	player_data.max_turn_duration = duration
 	if turn_manager:
 		turn_manager.set_max_turn_duration(duration)
 
@@ -118,80 +134,73 @@ func _on_turn_started() -> void:
 	player_turn_started.emit()
 
 func _on_turn_ended() -> void:
-	print("Player: ", player_name, " total movement cost this turn: ", movement_cost_spent_this_turn)
+	if player_data:
+		print("Player: ", player_data.name, " total movement cost this turn: ", movement_cost_spent_this_turn)
 	player_turn_ended.emit()
 
 func _on_turn_timeout() -> void:
-	print("Player: ", player_name, " turn timed out!")
+	if player_data:
+		print("Player: ", player_data.name, " turn timed out!")
+
+func get_player_name() -> String:
+	if not player_data:
+		_initialize_components()
+	return player_data.name
+
+func get_player_id() -> int:
+	if not player_data:
+		_initialize_components()
+	return player_data.player_id
+
+func get_movement_speed() -> float:
+	if not player_data:
+		_initialize_components()
+	return player_data.movement_speed
 
 func get_grid_position() -> Vector2i:
-	if player_data:
-		return player_data.get_grid_position()
-	return Vector2i(-1, -1)
+	if not player_data:
+		_initialize_components()
+	return player_data.get_grid_position()
 
 func set_grid_position(new_position: Vector2i) -> void:
-	if player_data:
-		player_data.set_position(new_position)
-		player_moved.emit(new_position)
+	if not player_data:
+		_initialize_components()
+	player_data.set_position(new_position)
+	player_moved.emit(new_position)
 
-func get_gear_weight():
-	print(player_data.gear)
-	var total_weight: float = 0.0
+func get_gear_weight() -> void:
+	if not player_data:
+		_initialize_components()
+	player_data.calculate_gear_weight()
 
-	for gear_type in player_data.gear.keys():
-		print("gear_type: ", gear_type)
-		var item = player_data.gear[gear_type]
-
-		match gear_type:
-			"extras":
-				for extra_name in item:
-					for extra_id in game_data.extras.keys():
-						if game_data.extras[extra_id]["name"] == extra_name:
-							total_weight += game_data.extras[extra_id]["weight"]
-							break
-			"tent":
-				for tent_id in game_data.tents.keys():
-					if game_data.tents[tent_id]["name"] == item:
-						total_weight += game_data.tents[tent_id]["weight"]
-						break
-			"sleeping_bag":
-				for sleeping_bag_id in game_data.sleeping_bags.keys():
-					if game_data.sleeping_bags[sleeping_bag_id]["name"] == item:
-						total_weight += game_data.sleeping_bags[sleeping_bag_id]["weight"]
-						break
-
-	player_data.gear_weight = total_weight
-
-func calculate_movement_speed():
-	var new_ms = movement_speed - player_data.gear_weight
-	player_data.movement_speed = new_ms
+func calculate_movement_speed() -> void:
+	if not player_data:
+		_initialize_components()
+	player_data.calculate_movement_speed()
 
 func get_movement_info() -> Dictionary:
+	if not player_data:
+		_initialize_components()
 	return {
 		"movement_speed": player_data.movement_speed,
 		"movement_cost_spent": movement_cost_spent_this_turn
 	}
 
 func get_player_info() -> Dictionary:
-	var info = {
-		"name": player_name,
-		"id": player_id,
-		"position": Vector2i(-1, -1),
-		"movement_speed": player_data.movement_speed,
-		"is_active": false,
-		"turn_active": false,
-		"gear": gear,
-		"gear_weight": gear_weight
-	}
+	if not player_data:
+		_initialize_components()
 	
-	if player_data:
-		info.name = player_data.name
-		info.id = player_data.player_id
-		info.position = player_data.get_grid_position()
-		info.movement_speed = player_data.movement_speed
-		info.is_active = player_data.is_active
-		info.gear = player_data.gear
-		info.gear_weight = player_data.gear_weight
+	var info = {
+		"name": player_data.name,
+		"id": player_data.player_id,
+		"position": player_data.get_grid_position(),
+		"movement_speed": player_data.movement_speed,
+		"base_movement_speed": player_data.base_movement_speed,
+		"is_active": player_data.is_active,
+		"turn_active": false,
+		"gear": player_data.gear,
+		"gear_weight": player_data.gear_weight
+	}
 	
 	if turn_manager:
 		info.turn_active = turn_manager.get_turn_active()
