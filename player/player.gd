@@ -13,8 +13,6 @@ var turn_manager: TurnManager
 var movement_controller: MovementController
 var hex_grid: Node3D
 
-var movement_cost_spent_this_turn: int = 0
-
 signal player_moved(new_position: Vector2i)
 signal player_action_completed(action_type: String)
 signal player_turn_started()
@@ -70,7 +68,7 @@ func move_to(target_position: Vector2i) -> bool:
 		print("Player: ", player_data.name, " cannot move - not their turn")
 		return false
 	
-	if not movement_controller or not movement_controller.move_to(target_position, movement_cost_spent_this_turn, player_data.movement_speed):
+	if not movement_controller or not movement_controller.move_to(target_position, turn_manager.get_movement_cost_spent(), player_data.movement_speed):
 		print("Player: ", player_data.name, " cannot move to: ", target_position)
 		return false
 	
@@ -80,16 +78,16 @@ func move_to(target_position: Vector2i) -> bool:
 		if hex_grid.has_method("get_tile_config_at"):
 			var tile_config = hex_grid.get_tile_config_at(target_position)
 			if tile_config:
-				movement_cost_spent_this_turn += tile_config.movement_cost
+				turn_manager.add_movement_cost(tile_config.movement_cost)
 	
 	player_moved.emit(target_position)
 	player_action_completed.emit("move")
 	return true
 
 func can_move_to(target_position: Vector2i) -> bool:
-	if movement_validator and player_data:
+	if movement_validator and player_data and turn_manager:
 		var adjacent_tiles = player_data.get_adjacent_tiles()
-		return movement_validator.can_move_to(target_position, adjacent_tiles, movement_cost_spent_this_turn, player_data.movement_speed)
+		return movement_validator.can_move_to(target_position, adjacent_tiles, turn_manager.get_movement_cost_spent(), player_data.movement_speed)
 	return false
 
 func start_turn() -> void:
@@ -130,12 +128,11 @@ func set_turn_duration(duration: float) -> void:
 		turn_manager.set_max_turn_duration(duration)
 
 func _on_turn_started() -> void:
-	movement_cost_spent_this_turn = 0
 	player_turn_started.emit()
 
 func _on_turn_ended() -> void:
-	if player_data:
-		print("Player: ", player_data.name, " total movement cost this turn: ", movement_cost_spent_this_turn)
+	if player_data and turn_manager:
+		print("Player: ", player_data.name, " total movement cost this turn: ", turn_manager.get_movement_cost_spent())
 	player_turn_ended.emit()
 
 func _on_turn_timeout() -> void:
@@ -181,9 +178,12 @@ func calculate_movement_speed() -> void:
 func get_movement_info() -> Dictionary:
 	if not player_data:
 		_initialize_components()
+	var movement_cost_spent = 0
+	if turn_manager:
+		movement_cost_spent = turn_manager.get_movement_cost_spent()
 	return {
 		"movement_speed": player_data.movement_speed,
-		"movement_cost_spent": movement_cost_spent_this_turn
+		"movement_cost_spent": movement_cost_spent
 	}
 
 func get_player_info() -> Dictionary:

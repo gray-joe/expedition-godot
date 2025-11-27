@@ -4,6 +4,7 @@ class_name TurnManager
 var is_turn_active: bool = false
 var max_turn_duration: float = 0.0
 var turn_timer: float = 0.0
+var movement_cost_spent_this_turn: int = 0
 
 signal turn_started()
 signal turn_ended()
@@ -16,12 +17,22 @@ func _init(max_duration: float = 0.0):
 func start_turn() -> void:
 	is_turn_active = true
 	turn_timer = 0.0
+	movement_cost_spent_this_turn = 0
 	turn_started.emit()
 
 func end_turn() -> void:
 	is_turn_active = false
 	turn_timer = 0.0
 	turn_ended.emit()
+
+func get_movement_cost_spent() -> int:
+	return movement_cost_spent_this_turn
+
+func add_movement_cost(cost: int) -> void:
+	movement_cost_spent_this_turn += cost
+
+func set_movement_cost_spent(cost: int) -> void:
+	movement_cost_spent_this_turn = cost
 
 func can_perform_action() -> bool:
 	return is_turn_active
@@ -75,7 +86,8 @@ func get_turn_info() -> Dictionary:
 		"duration": get_turn_duration(),
 		"remaining_time": get_remaining_time(),
 		"max_duration": max_turn_duration,
-		"is_timed_out": is_turn_timed_out()
+		"is_timed_out": is_turn_timed_out(),
+		"movement_cost_spent": movement_cost_spent_this_turn
 	}
 
 
