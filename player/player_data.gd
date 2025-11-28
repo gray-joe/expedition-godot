@@ -12,6 +12,7 @@ var player_id: int
 var gear: Dictionary
 var gear_weight: float = 0.0
 var max_turn_duration: float = 0.0
+var gear_manager: GearManager
 
 func _init(p_name: String, p_id: int, p_speed: float = 8.0, p_starting_type: String = "starting", p_turn_duration: float = 0.0):
 	name = p_name
@@ -23,6 +24,7 @@ func _init(p_name: String, p_id: int, p_speed: float = 8.0, p_starting_type: Str
 	gear_weight = 0.0
 	base_movement_speed = p_speed
 	movement_speed = p_speed
+	gear_manager = GearManager.new(game_data)
 
 func set_position(new_position: Vector2i) -> void:
 	position = new_position
@@ -52,30 +54,7 @@ func get_adjacent_tiles() -> Array[Vector2i]:
 	return adjacent_tiles
 
 func calculate_gear_weight() -> void:
-	var total_weight: float = 0.0
-
-	for gear_type in gear.keys():
-		var item = gear[gear_type]
-
-		match gear_type:
-			"extras":
-				for extra_name in item:
-					for extra_id in game_data.extras.keys():
-						if game_data.extras[extra_id]["name"] == extra_name:
-							total_weight += game_data.extras[extra_id]["weight"]
-							break
-			"tent":
-				for tent_id in game_data.tents.keys():
-					if game_data.tents[tent_id]["name"] == item:
-						total_weight += game_data.tents[tent_id]["weight"]
-						break
-			"sleeping_bag":
-				for sleeping_bag_id in game_data.sleeping_bags.keys():
-					if game_data.sleeping_bags[sleeping_bag_id]["name"] == item:
-						total_weight += game_data.sleeping_bags[sleeping_bag_id]["weight"]
-						break
-
-	gear_weight = total_weight
+	gear_weight = gear_manager.calculate_gear_weight(gear)
 
 func calculate_movement_speed() -> void:
-	movement_speed = max(0.0, base_movement_speed - gear_weight)
+	movement_speed = gear_manager.calculate_movement_speed(base_movement_speed, gear_weight)
